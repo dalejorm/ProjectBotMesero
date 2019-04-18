@@ -14,8 +14,12 @@ class CreateAdministradoresTable extends Migration
     public function up()
     {
         Schema::create('administradores', function (Blueprint $table) {
-            $table->increments('id');
+            $table->increments('id')->primary();
+            $table->string('nombre');
+            $table->string('password');
+            $table->unsignedBigInteger('restaurante_id');
             $table->timestamps();
+            $table->foreign('restaurante_id')->references('id')->on('restaurantes')>onUpdate('cascade')->onDelete('cascade');
         });
     }
 

@@ -14,9 +14,13 @@ class CreateCategoriasTable extends Migration
     public function up()
     {
         Schema::create('categorias', function (Blueprint $table) {
-            $table->increments('id');
+            $table->increments('id')->primary();$table->increments('id')->primary();
+            $table->string('nombre')->unique();
+            $table->string('descripcion');
+            $table->unsignedBigInteger('restaurante_id');
             $table->timestamps();
-        });
+            $table->foreign('restaurante_id')->references('id')->on('restaurantes')>onUpdate('cascade')->onDelete('cascade');
+       });
     }
 
     /**

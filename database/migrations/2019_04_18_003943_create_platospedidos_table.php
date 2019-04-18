@@ -14,8 +14,11 @@ class CreatePlatospedidosTable extends Migration
     public function up()
     {
         Schema::create('platospedidos', function (Blueprint $table) {
-            $table->increments('id');
-            $table->timestamps();
+            $table->unsignedBigInteger('pedido_id');
+            $table->foreign('pedido_id')->references('id')->on('pedidos');
+            $table->unsignedBigInteger('plato_id');
+            $table->foreign('plato_id')->references('id')->on('platos')>onUpdate('cascade')->onDelete('cascade');
+            $table->string('solicitud');
         });
     }
 
