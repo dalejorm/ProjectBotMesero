@@ -11,7 +11,7 @@ class categoria2Seeder extends Seeder
      */
     public function run()
     {
-        $categoria = \App\categoria::create(['nombre' => 'Postres', 'descripcion'=> 'Categorias de tortas y reposteria.','restaurante_id'=>1]);
+        $categoria = \App\categoria::create(['nombre' => 'Postres', 'descripcion'=> 'Categorias de tortas y reposteria.','restaurante_id1'=>1]);
 
         \App\plato::create(['categoria_id' => $categoria->id,'nombre' => 'Torta de chocolate','descripcion' => 'torta de harina de trigo recubierta en chocolate','precio' => 4500]);
     
