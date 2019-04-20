@@ -19,8 +19,8 @@ class CreatePlatosTable extends Migration
             $table->string('descripcion');
             $table->integer('precio');
             $table->timestamps();
-            $table->unsignedBigInteger('categoria_id');
-            $table->foreign('categoria_id')->references('id')->on('categorias')>onUpdate('cascade')->onDelete('cascade');
+            $table->unsignedInteger('categoria_id');
+            $table->foreign('categoria_id')->references('id')->on('categorias')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

@@ -14,13 +14,13 @@ class CreateOrdenesTable extends Migration
     public function up()
     {
         Schema::create('ordenes', function (Blueprint $table) {
-            $table->increments('id')->primary();
+            $table->increments('id');
             $table->dateTime('fecha_inicial');
             $table->dateTime('fecha_final');
             $table->string('estado');
             $table->timestamps();
-            $table->unsignedBigInteger('pedido_id');
-            $table->foreign('pedido_id')->references('id')->on('pedidos')>onUpdate('cascade')->onDelete('cascade');
+            $table->unsignedInteger('pedido_id');
+            $table->foreign('pedido_id')->references('id')->on('pedidos')->onUpdate('cascade')->onDelete('cascade');
 
         });
     }
