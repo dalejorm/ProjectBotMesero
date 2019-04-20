@@ -13,6 +13,7 @@ class CreateRestaurantesTable extends Migration
      */
     public function up()
     {
+        
         Schema::create('restaurantes', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name')->unique();
@@ -27,7 +28,7 @@ class CreateRestaurantesTable extends Migration
      * @return void
      */
     public function down()
-    {
+    { 
         Schema::dropIfExists('restaurantes');
     }
 }

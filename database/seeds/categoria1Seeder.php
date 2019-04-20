@@ -11,6 +11,7 @@ class categoria1Seeder extends Seeder
      */
     public function run()
     {
+        DB::statement("ALTER TABLE categorias AUTO_INCREMENT = 0;");
         $categoria = \App\categoria::create(['nombre' => 'bebidas', 'descripcion'=> 'Categorias de refrescos y jugos','restaurante_id1'=>'1']);
 
     }

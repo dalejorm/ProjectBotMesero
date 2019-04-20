@@ -4,3 +4,6 @@ create user mesero@localhost identified by 'lacuenta';
 
 https://laravel.com/docs/5.8/migrations#creating-columns
 información importante
+
+php artisan migrate
+php artisan db:seed
