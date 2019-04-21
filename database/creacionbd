@@ -7,3 +7,4 @@ información importante
 
 php artisan migrate
 php artisan db:seed
+https://laravel.com/docs/5.8/queries

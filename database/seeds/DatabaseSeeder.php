@@ -11,8 +11,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement("ALTER TABLE restaurantes AUTO_INCREMENT = 0;"); 
-        DB::statement("ALTER TABLE categorias AUTO_INCREMENT = 0;"); 
         \App\restaurante::query()->delete();
         \App\administrador::query()->delete();        
         \App\categoria::query()->delete();        
