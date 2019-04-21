@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class pedido extends Model
 {
+    public $table = "pedidos";
     protected $fillable = ['estado', 'fecha','usuario_id'];
 
     public function platopedido(){return $this->hasMany('App\platopedido');}

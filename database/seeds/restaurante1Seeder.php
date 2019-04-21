@@ -11,6 +11,7 @@ class restaurante1Seeder extends Seeder
      */
     public function run()
     {
+        DB::statement("ALTER TABLE restaurantes AUTO_INCREMENT = 0;");
         $restaurante = \App\restaurante::create(['name' => 'ComeBot', 'direccion'=> 'Calle siempre viva']);
 
     }
