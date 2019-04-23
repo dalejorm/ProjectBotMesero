@@ -8,92 +8,120 @@ use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Outgoing\Question;
 use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 
-class ConversacionCarta extends Conversation
-{
-   
+class ConversacionCarta extends Conversation {
+
+    protected $plato;
     /**
      * Start the conversation.
      *
      * @return mixed
      */
-    public function run()
-    {
+    public function run() {
         $this->atender();
-
     }
 
-    public function atender(){ 
-       $this->mostrarmenu();  
-    }    
+    public function atender() {
+        $this->mostrarmenu();
+    }
 
-    public function mostrarmenu(){
+    public function mostrarmenu() {
         $question = Question::create('¿Quieres conocer nuestros productos?')->addButtons([
-                Button::create('Sí')->value('Sí'),
-                Button::create('No')->value('No')
+            Button::create('Sí')->value('Sí'),
+            Button::create('No')->value('No'),
+            Button::create('Volver')->value('Volver')
         ]);
         $this->ask($question, function (Answer $answer) {
             if ($answer->isInteractiveMessageReply()) {
-                if($answer->getValue()== 'Sí'){
+                if ($answer->getValue() == 'Sí') {
                     $this->mostrarCategorias();
+                } elseif ($answer->getValue() == 'Volver') {
+                    $this->say('¿Necesitas ayuda?, prueba diciendo Hola o Ayuda');
                 }
-                if($answer->getValue()== 'No'){
-
-                }
-            }
-            else
-            {
+            } else {
                 $this->say("Selecciona una respuesta");
                 $this->mostrarmenu();
             }
         });
     }
-    public function mostrarCategorias(){
-        $categorias = \App\categoria::orderby('nombre', 'asc')->get();       
-        $buttonArray = []; 
-        foreach($categorias as $categoria){
-            $button = Button::create($categoria->nombre.": ".$categoria->descripcion)->value($categoria->id);
+
+    public function mostrarCategorias() {
+        $categorias = \App\categoria::orderby('nombre', 'asc')->get();
+        $buttonArray = [];
+        foreach ($categorias as $categoria) {
+            $button = Button::create($categoria->nombre)->value($categoria->id);
             $buttonArray[] = $button;
         }
-        if(count($categorias) == 0){
+        $buttonArray[] = Button::create('Volver')->value('Volver');
+        if (count($categorias) == 0) {
             $this->say("¡Ay caramba!, no tenemos categorías");
-        }else{
+        } else {
             $question = Question::create('¿Selecciona una categoría?')->addButtons($buttonArray);
-                $this->ask($question, function (Answer $answer) {
+            $this->ask($question, function (Answer $answer) {
                 if ($answer->isInteractiveMessageReply()) {
-                $this->mostrarPlatos($answer->getValue());
-                }
-                else
-                {
+                    if ($answer->getValue() != 'Volver') {
+                        $this->mostrarPlatos($answer->getValue());
+                    } else {
+                        $this->mostrarmenu();
+                    }
+                } else {
                     $this->say("Selecciona una respuesta");
                     $this->mostrarCategorias();
                 }
-            }); 
-        }        
-    }  
-    
-    public function mostrarPlatos($ans){
-        $platos = \App\plato::orderby('nombre', 'asc')->get()->where('categoria_id',$ans);       
-        $buttonArray = []; 
-        foreach($platos as $plato){
-            $button = Button::create($plato->nombre.": ".$plato->descripcion)->value($plato->nombre);
+            });
+        }
+    }
+
+    public function mostrarPlatos($ans) {
+        $platos = \App\plato::orderby('nombre', 'asc')->get()->where('categoria_id', $ans);
+        $buttonArray = [];
+        foreach ($platos as $plato) {
+            $button = Button::create($plato->nombre)->value($plato->id);
             $buttonArray[] = $button;
         }
-        if(count($platos) == 0){
+        $buttonArray[] = Button::create('Volver')->value('Volver');
+        if (count($platos) == 0) {
             $this->say("¡Ay caramba!, no tenemos productos en esta categoría, prueba con otra");
             $this->mostrarCategorias();
-        }else {
+        } else {
             $question = Question::create('Selecciona un plato')->addButtons($buttonArray);
-                $this->ask($question, function (Answer $answer) {
+            $this->ask($question, function (Answer $answer) {
                 if ($answer->isInteractiveMessageReply()) {
-                //$this->mostrarPlatos($answer.getText());
-                }
-                else
-                {
+                    if ($answer->getValue() != 'Volver') {
+                        $this->seleccionarPlato($answer->getValue());
+                    }else{
+                        $this->mostrarCategorias();
+                    }
+                } else {
                     $this->say("Selecciona una respuesta");
                     $this->mostrarPlatos();
                 }
-            }); 
+            });
         }
+    }
+
+    public function seleccionarPlato($ans) {        
+        $this->plato = \App\plato::find($ans);
+
+        $this->say("Plato : ".$this->plato->nombre." Descripción: ".$this->plato->descripcion." Precio: $ ".$this->plato->precio);
+
+        $question = Question::create('Selecciona una opción')->addButtons([
+            Button::create('Agregar al Pedido')->value('Agregar'),
+            Button::create('Volver')->value('Volver')
+        ]);
+            
+        $this->ask($question, function (Answer $answer) {
+            if ($answer->isInteractiveMessageReply()) {
+                if ($answer->getValue() != 'Volver') {
+                    //Agregar plato al pedido método
+                }else{
+                    $this->say("Plato : ".$this->plato->categoria_id);
+                    $this->mostrarPlatos($this->plato->categoria_id);
+                }
+            } else {
+                $this->say("Selecciona una opción");
+                $this->seleccionarPlato($ans);
+            }
+        });
         
     }
 }

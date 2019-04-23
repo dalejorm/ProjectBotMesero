@@ -17,7 +17,7 @@ $botman->hears('/carta', function($bot){
 
 
 $botman->fallback(function ($bot) {
-    $bot->reply('¿necesitas ayuda?, prueba diciendo Hola o ayuda');
+    $bot->reply('¿Necesitas ayuda?, prueba diciendo Hola o Ayuda');
 });
 
 ////Administrador
