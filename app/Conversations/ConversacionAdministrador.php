@@ -7,6 +7,7 @@ use Illuminate\Foundation\Inspiring;
 use BotMan\BotMan\Messages\Incoming\Answer;
 use BotMan\BotMan\Messages\Outgoing\Question;
 use BotMan\BotMan\Messages\Outgoing\Actions\Button;
+use App\Conversations\ConversacionCategoria;
 
 class ConversacionAdministrador extends Conversation
 {
@@ -39,7 +40,7 @@ class ConversacionAdministrador extends Conversation
                     if($this->verificarContrasena() == true){
                         $this->say("Usuario correcto");
                         $this->bandera = 1;
-                            
+                        $this->queHacer();
                         }
                 });
             }
@@ -80,6 +81,32 @@ class ConversacionAdministrador extends Conversation
            return true; 
         }
 
+    }
+
+    public function queHacer(){
+        $question = Question::create('¿Que deseas hacer?')->addButtons([
+                Button::create('Agregar Categorías')->value(1),
+                Button::create('Agregar Platos')->value(2),
+                Button::create('Atender pedidos')->value(3)
+        ]);
+        $this->ask($question, function (Answer $answer) {
+            if ($answer->isInteractiveMessageReply()) {
+                if($answer->getValue()== 1){                    
+                    $this->bot->startConversation(new ConversacionCategoria(1));
+                }
+                if($answer->getValue()== 2){
+                    //agregar platos
+                }
+                if($answer->getValue()== 2){
+                    //atender pedidos
+                }
+            }
+            else
+            {
+                $this->say("Selecciona una respuesta");
+                $this->queHacer();
+            }
+        });
     }
     
     

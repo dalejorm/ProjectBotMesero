@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class categoria extends Model
 {
     public $table = "categorias";
-    protected $fillable = ['nombre', 'descripcion','restaurante_id'];
+    protected $fillable = ['nombre', 'descripcion','restaurante_id1'];
 
     public function restaurante(){return $this->belongsTo('App\restaurante');}
 
