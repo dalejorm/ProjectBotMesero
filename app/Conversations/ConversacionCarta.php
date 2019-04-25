@@ -11,6 +11,8 @@ use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 class ConversacionCarta extends Conversation {
 
     protected $plato;
+    protected $contador = 0;
+    protected $idpedido;
     /**
      * Start the conversation.
      *
@@ -25,6 +27,7 @@ class ConversacionCarta extends Conversation {
     }
 
     public function mostrarmenu() {
+        $contador = 0;
         $question = Question::create('¿Quieres conocer nuestros productos?')->addButtons([
             Button::create('Sí')->value('Sí'),
             Button::create('No')->value('No'),
@@ -44,7 +47,7 @@ class ConversacionCarta extends Conversation {
         });
     }
 
-    public function mostrarCategorias() {
+    public function mostrarCategorias() {        
         $categorias = \App\categoria::orderby('nombre', 'asc')->get();
         $buttonArray = [];
         foreach ($categorias as $categoria) {
@@ -106,13 +109,16 @@ class ConversacionCarta extends Conversation {
 
         $question = Question::create('Selecciona una opción')->addButtons([
             Button::create('Agregar al Pedido')->value('Agregar'),
+            Button::create('Finalizar Pedido')->value('Finalizar'),
             Button::create('Volver')->value('Volver')
         ]);
             
         $this->ask($question, function (Answer $answer) {
             if ($answer->isInteractiveMessageReply()) {
-                if ($answer->getValue() != 'Volver') {
-                    //Agregar plato al pedido método
+                if ($answer->getValue() == 'Agregar') {
+                    $this->agregarPlatoPedido($this->plato->id,$this->plato->nombre,$this->plato->categoria_id);
+                }elseif($answer->getValue() == 'Finalizar'){
+                    //Metodo
                 }else{
                     $this->say("Plato : ".$this->plato->categoria_id);
                     $this->mostrarPlatos($this->plato->categoria_id);
@@ -123,5 +129,40 @@ class ConversacionCarta extends Conversation {
             }
         });
         
+    }
+
+    public function agregarPlatoPedido($idplato,$nombrePlato,$idcategoria){
+        $this->contador = $this->contador + 1;
+        $buttonArray = [];
+        if($this->contador == 1){
+            \App\pedido::create ([
+                'estado' => 'Pendiente',
+                'fecha' => new \DateTime(),
+                'usuario_id' => 1
+            ]);            
+            $this->idpedido = \App\pedido::max('id');                                    
+        }
+
+        \App\platopedido::create ([
+            'pedido_id' => $this->idpedido,
+            'plato_id' => $idplato
+        ]);
+        $this->say("Se ha agregado el plato: ".$nombrePlato.", su pedido es el Nro. ".$this->idpedido);
+        $buttonArray[] = Button::create('Finalizar Pedido')->value('Finalizar');
+        $buttonArray[] = Button::create('Agregar más Platos')->value('Volver');
+
+        $question = Question::create('')->addButtons($buttonArray);
+        $this->ask($question, function (Answer $answer) {
+            if ($answer->isInteractiveMessageReply()) {
+                if ($answer->getValue() == 'Finalizar') {
+                    //Finalizar Pedido
+                }elseif($answer->getValue() == 'Volver'){
+                    $this->mostrarPlatos($this->plato->categoria_id);
+                }
+            } else {
+                $this->say("Selecciona una opción");
+                $this->mostrarPlatos();
+            }
+        });
     }
 }

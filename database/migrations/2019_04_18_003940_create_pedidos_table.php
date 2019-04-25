@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 class CreatePedidosTable extends Migration
-{
+{    
     /**
      * Run the migrations.
      *
@@ -19,7 +19,7 @@ class CreatePedidosTable extends Migration
             $table->dateTime('fecha');
             $table->timestamps();
             $table->unsignedInteger('usuario_id');
-            $table->foreign('usuario_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
+            //$table->foreign('usuario_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
 
 
         });

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class platopedido extends Model
 {
+    public $timestamps = false;
     public $table = "platospedidos";
     protected $fillable = ['pedido_id', 'plato_id'];
 

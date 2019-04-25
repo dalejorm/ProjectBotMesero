@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 class CreatePlatospedidosTable extends Migration
-{
+{    
     /**
      * Run the migrations.
      *
@@ -17,8 +17,7 @@ class CreatePlatospedidosTable extends Migration
             $table->unsignedInteger('pedido_id');
             $table->foreign('pedido_id')->references('id')->on('pedidos');
             $table->unsignedInteger('plato_id');
-            $table->foreign('plato_id')->references('id')->on('platos')->onUpdate('cascade')->onDelete('cascade');
-            $table->string('solicitud');
+            $table->foreign('plato_id')->references('id')->on('platos')->onUpdate('cascade')->onDelete('cascade');            
         });
     }
 
