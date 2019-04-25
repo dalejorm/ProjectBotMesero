@@ -82,7 +82,7 @@ class ConversacionCategoria extends Conversation
                 $this->descripcion = $answer-> getValue();
                 $this->solicitarDatos();
             }else{
-                $this->say("No ingresaste un nombre");
+                $this->say("No ingresaste una descripción");
                 $this->agregarCategoria();
             }
         });        
