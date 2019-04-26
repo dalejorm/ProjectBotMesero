@@ -13,6 +13,14 @@ class ConversacionCarta extends Conversation {
     protected $plato;
     protected $contador = 0;
     protected $idpedido;
+    protected $usuario;
+    protected $idusuario;
+    protected $contrasena;
+    protected $validarusuario;
+    protected $validarcontrasena;
+    protected $bandera = 0;
+    protected $pedido;
+    protected $direccion;
     /**
      * Start the conversation.
      *
@@ -118,7 +126,7 @@ class ConversacionCarta extends Conversation {
                 if ($answer->getValue() == 'Agregar') {
                     $this->agregarPlatoPedido($this->plato->id,$this->plato->nombre,$this->plato->categoria_id);
                 }elseif($answer->getValue() == 'Finalizar'){
-                    //Metodo
+                    $this->finalizarPedido($this->idpedido);                    
                 }else{
                     $this->say("Plato : ".$this->plato->categoria_id);
                     $this->mostrarPlatos($this->plato->categoria_id);
@@ -151,11 +159,11 @@ class ConversacionCarta extends Conversation {
         $buttonArray[] = Button::create('Finalizar Pedido')->value('Finalizar');
         $buttonArray[] = Button::create('Agregar más Platos')->value('Volver');
 
-        $question = Question::create('')->addButtons($buttonArray);
+        $question = Question::create('Seleccione una opción')->addButtons($buttonArray);
         $this->ask($question, function (Answer $answer) {
             if ($answer->isInteractiveMessageReply()) {
                 if ($answer->getValue() == 'Finalizar') {
-                    //Finalizar Pedido
+                    $this->finalizarPedido($this->idpedido);
                 }elseif($answer->getValue() == 'Volver'){
                     $this->mostrarPlatos($this->plato->categoria_id);
                 }
@@ -165,4 +173,85 @@ class ConversacionCarta extends Conversation {
             }
         });
     }
+
+    public function finalizarPedido($id){
+        if($this->contador > 0){
+            $this->ask("Ingrese su usuario",function(Answer $response){
+                $this->usuario = $response->getText();                
+                if($this->verificarUsuario() == true){
+                    $this->ask("Ingrese su contraseña",function(Answer $response){
+                        $this->contrasena = $response->getText();           
+                        if($this->verificarContrasena() > 0){
+                            $this->say("Usuario correcto");
+                            $this->bandera = 1;
+                            $this->pedido = \App\pedido::findOrFail($this->idpedido);
+                            $this->pedido->estado = 'En Preparación';
+                            $this->pedido->usuario_id = $this->verificarContrasena();
+                            $this->ask("Ingrese la dirección para el pedido",function(Answer $response){
+                                if($response->getText() != ''){
+                                    $this->direccion = $response->getText();
+                                    $this->pedido = \App\pedido::findOrFail($this->idpedido);
+                                    $this->pedido->direccion = $this->direccion;
+                                    $this->say("Señor(a) ".$this->usuario." su pedido nro. ".$this->idpedido." se ha finalizado, ya se ha enviado la información de su pedido al restaurante y se encuentra en preparación, no puede realizar más modificaciones.");
+                                    $this->say("Los platos agregados a su pedido son: ");
+                                    $platospedidos = \App\plato::select ('nombre','precio') 
+                                            -> join ('platospedidos','platospedidos.plato_id','=','platos.id')
+                                            -> where ('platospedidos.pedido_id', "=", $this->idpedido)
+                                            ->get();
+
+                                    foreach ($platospedidos as $platopedido) {
+                                        $this->say("".$platopedido->nombre." Precio: ".$platopedido->precio);
+                                    }
+                                    $this->mostrarmenu();
+                                }else{
+                                    $this->say("Debe ingresar una dirección");
+                                }                          
+                            });                            
+                        }else{
+                            $this->finalizarPedido($this->idpedido);        
+                        }
+                    });
+                }else{
+                    $this->finalizarPedido($this->idpedido);
+                }
+            });
+        }else{
+            $this->say("No ha agregado platos al pedido");
+            $this->mostrarPlatos($this->plato->categoria_id);
+        }
+         
+    }
+
+    public function verificarUsuario(){
+        $this->validarusuario = \App\User::select ('name') -> where ('name', "=", $this->usuario)->get();
+        if(count($this->validarusuario)== 0){
+            $this->say("El usuario ingresado es incorrecto. Inténtelo nuevamente");
+            return false;
+        }
+        else{
+           return true; 
+        }
+    }
+
+    public function verificarContrasena(){
+
+        $users = \App\User::select ('id') 
+            -> where ('name', "=", $this->usuario)
+            -> where ('password', "=", $this->contrasena)
+            ->get();
+
+        foreach ($users as $user) {
+            $this->idusuario = $user->id;
+        }      
+
+        if(count($users)==0){
+            $this->say("La contraseña es incorrecta");            
+            return 0;
+        }
+        else{            
+           return $this->idusuario; 
+        }
+
+    }
+    
 }

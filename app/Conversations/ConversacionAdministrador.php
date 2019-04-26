@@ -50,9 +50,7 @@ class ConversacionAdministrador extends Conversation
     }
 
     public function verificarUsuario(){
-//        $this->validarusuario = \App\administrador::where('nombre', '=', $this->usuario)->get();
-        $this->validarusuario = \App\administrador::select ('nombre') -> where ('nombre', "=", $this->usuario)->get();
-        //$this->say("El usuario ingresado es incorrecto".$this->validarusuario);
+        $this->validarusuario = \App\administrador::select ('nombre') -> where ('nombre', "=", $this->usuario)->get();       
 
         if(count($this->validarusuario)== 0){
             $this->say("El usuario ingresado es incorrecto");
@@ -61,7 +59,6 @@ class ConversacionAdministrador extends Conversation
         else{
            return true; 
         }
-
     }
 
     public function verificarContrasena(){

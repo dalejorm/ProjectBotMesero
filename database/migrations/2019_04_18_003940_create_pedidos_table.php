@@ -19,6 +19,7 @@ class CreatePedidosTable extends Migration
             $table->dateTime('fecha');
             $table->timestamps();
             $table->unsignedInteger('usuario_id');
+            $table->string('direccion')->nullable();
             //$table->foreign('usuario_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
 
 
