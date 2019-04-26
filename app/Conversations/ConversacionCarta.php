@@ -183,15 +183,15 @@ class ConversacionCarta extends Conversation {
                         $this->contrasena = $response->getText();           
                         if($this->verificarContrasena() > 0){
                             $this->say("Usuario correcto");
-                            $this->bandera = 1;
-                            $this->pedido = \App\pedido::findOrFail($this->idpedido);
-                            $this->pedido->estado = 'En Preparación';
-                            $this->pedido->usuario_id = $this->verificarContrasena();
+                            $this->bandera = 1;                            
                             $this->ask("Ingrese la dirección para el pedido",function(Answer $response){
                                 if($response->getText() != ''){
                                     $this->direccion = $response->getText();
                                     $this->pedido = \App\pedido::findOrFail($this->idpedido);
+                                    $this->pedido->estado = 'En Preparación';
+                                    $this->pedido->usuario_id = $this->verificarContrasena();
                                     $this->pedido->direccion = $this->direccion;
+                                    $this->pedido->save();
                                     $this->say("Señor(a) ".$this->usuario." su pedido nro. ".$this->idpedido." se ha finalizado, ya se ha enviado la información de su pedido al restaurante y se encuentra en preparación, no puede realizar más modificaciones.");
                                     $this->say("Los platos agregados a su pedido son: ");
                                     $platospedidos = \App\plato::select ('nombre','precio') 
