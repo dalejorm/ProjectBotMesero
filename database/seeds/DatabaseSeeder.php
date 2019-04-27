@@ -15,11 +15,13 @@ class DatabaseSeeder extends Seeder
         \App\administrador::query()->delete();        
         \App\categoria::query()->delete();        
         \App\plato::query()->delete();
+        \App\User::query()->delete();
 
         $this->call(restaurante1Seeder::class);
         $this->call(administrador1Seeder::class);
         $this->call(categoria1Seeder::class);
         $this->call(categoria2Seeder::class);
+        $this->call(user1Seeder::class);
    
     }
 }
