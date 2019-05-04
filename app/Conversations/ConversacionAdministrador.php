@@ -85,7 +85,7 @@ class ConversacionAdministrador extends Conversation
         $question = Question::create('¿Que deseas hacer?')->addButtons([
                 Button::create('Agregar Categorías')->value(1),
                 Button::create('Agregar Platos')->value(2),
-                Button::create('Atender pedidos')->value(3)
+                Button::create('Consultar pedidos')->value(3)
         ]);
         $this->ask($question, function (Answer $answer) {
             if ($answer->isInteractiveMessageReply()) {
@@ -96,8 +96,8 @@ class ConversacionAdministrador extends Conversation
                 if($answer->getValue()== 2){
                     $this->bot->startConversation(new ConversacionPlato());
                 }
-                if($answer->getValue()== 2){
-                    //atender pedidos
+                if($answer->getValue()== 3){
+                    $this->bot->startConversation(new ConversacionPedidos());
                 }
             }
             else
