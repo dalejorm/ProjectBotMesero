@@ -4,7 +4,7 @@ namespace Tests\BotMan;
 
 use Tests\TestCase;
 
-class PedidoTest extends TestCase
+class ConversacionAdministradorTest /**extends TestCase */
 {
     /**
      * A basic test example.
@@ -23,7 +23,7 @@ class PedidoTest extends TestCase
             ->receives('Alejandro')
             ->assertReply('Ingrese su contraseña')
             ->receives('12345678')
-            ->assertReply('Usuario correcto');
+            ->assertReply('Usuario correcto');            
     }
 
     public function testlogeoFailUser(){
@@ -39,6 +39,16 @@ class PedidoTest extends TestCase
             ->receives('Alejandro')
             ->assertReply('Ingrese su contraseña')
             ->receives('pepitoperez')
-            ->assertReply('La contraseña es incorrecta');
+            ->assertReply('La contraseña es incorrecta');            
     }
+    public function testmenuNopedidos(){
+        $this->bot->receives('/administrar')
+            ->assertReply('Ingrese su usuario')
+            ->receives('Alejandro')
+            ->assertReply('Ingrese su contraseña')
+            ->receives('12345678')
+            ->assertReply('Usuario correcto')
+            ->assertQuestion('¿Que deseas hacer?')
+            ->receivesInteractiveMessage('Consultar pedidos');
+    }    
 }

@@ -20,7 +20,7 @@ class ConversacionPedidos extends Conversation
     }
 
 
-    public function ConsultarPedidos() {        
+    public function ConsultarPedidos() {       
         $estado_pedidos = \App\pedido::orderby('estado', 'asc')->get();
         $buttonArray = [];
         foreach ($estado_pedidos as $estado) {
@@ -55,7 +55,7 @@ class ConversacionPedidos extends Conversation
                 -> orderby('fecha', 'asc')->get();
         $buttonArray = [];
         foreach ($pedidos as $pedido) {
-            $button = Button::create('Nro.: '.$pedido->idpedido.' Fecha: '.$pedido->fecha.' Usuario: '.$pedido->name)->value($pedido->id);
+            $button = Button::create('Nro.: '.$pedido->idpedido.' Fecha: '.$pedido->fecha.' Usuario: '.$pedido->name)->value($pedido->idpedido);
             $buttonArray[] = $button;
         }
         $buttonArray[] = Button::create('Volver')->value('Volver');
@@ -67,8 +67,7 @@ class ConversacionPedidos extends Conversation
             $this->ask($question, function (Answer $answer) {
                 if ($answer->isInteractiveMessageReply()) {
                     if ($answer->getValue() != 'Volver') {
-                        //Aquí va función de alejo
-                        //$this->seleccionarPlato($answer->getValue());
+                        $this->listarPedidosDetallado($answer->getValue());
                     }else{
                         $this->ConsultarPedidos();
                     }
@@ -78,5 +77,21 @@ class ConversacionPedidos extends Conversation
                 }
             });
         }
+    }
+
+    public function listarPedidosDetallado($ans) {
+        $platospedidos = \App\plato::select('platos.id as idplato','nombre', 'descripcion')
+                -> leftJoin ('platospedidos','platospedidos.plato_id','=','platos.id')
+                -> where('pedido_id', $ans)
+                -> orderby('platos.nombre', 'asc')->get();  
+        $orden = "";
+        $valor = 0;
+        $this->say("Información del pedido:");
+        foreach ($platospedidos as $plato) {
+            $valor ++;
+            $orden = $orden.$valor."- ".$plato->nombre."\n";
+                    
+        }
+        $this->say($orden);   
     }
 }
