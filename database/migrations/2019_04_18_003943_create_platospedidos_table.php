@@ -14,6 +14,7 @@ class CreatePlatospedidosTable extends Migration
     public function up()
     {
         Schema::create('platospedidos', function (Blueprint $table) {
+            $table->increments('id');
             $table->unsignedInteger('pedido_id');
             $table->foreign('pedido_id')->references('id')->on('pedidos');
             $table->unsignedInteger('plato_id');
