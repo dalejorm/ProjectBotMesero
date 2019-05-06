@@ -20,8 +20,8 @@ class ConversacionPedidos extends Conversation
     }
 
 
-    public function ConsultarPedidos() {       
-        $estado_pedidos = \App\pedido::orderby('estado', 'asc')->get();
+    public function ConsultarPedidos() {
+        $estado_pedidos = \App\pedido::select('estado')->distinct('estado')-> orderby('estado', 'asc')->get();
         $buttonArray = [];
         foreach ($estado_pedidos as $estado) {
             $button = Button::create($estado->estado)->value($estado->estado);

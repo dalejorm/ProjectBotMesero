@@ -21,6 +21,7 @@ class ConversacionCarta extends Conversation {
     protected $bandera = 0;
     protected $pedido;
     protected $direccion;
+    protected $idplato;
     /**
      * Start the conversation.
      *
@@ -89,8 +90,11 @@ class ConversacionCarta extends Conversation {
             $button = Button::create($plato->nombre)->value($plato->id);
             $buttonArray[] = $button;
         }
-        $buttonArray[] = Button::create('Volver')->value('Volver');
+        
         $buttonArray[] = Button::create('Eliminar Platos del Pedido')->value('Eliminar');
+        $buttonArray[] = Button::create('Finalizar Pedido')->value('Finalizar');
+        $buttonArray[] = Button::create('Volver')->value('Volver');
+        
         if (count($platos) == 0) {
             $this->say("No tenemos platos registrados en esta categoría, intenta con otra");
             $this->mostrarCategorias();
@@ -288,11 +292,13 @@ class ConversacionCarta extends Conversation {
                             Button::create('Sí')->value('Sí'),
                             Button::create('No')->value('No')
                         ]);
-                       $this->ask($question2, function (Answer $answer2) {
+                        $this->idplato = $answer->getValue();
+                        $this->ask($question2, function (Answer $answer2) {
                             if ($answer2->isInteractiveMessageReply()) {
                                 if ($answer2->getValue() == 'Sí') {
-                                    $eliminarplato=App/platopedido::find($answer->getValue())->delete();
+                                    $eliminarplato = \App\platopedido::find($this->idplato)->delete();
                                     $this->say("Se ha eliminado el plato del pedido");
+                                    $this->listarPlatosAEliminar($this->idpedido);
                                 } elseif ($answer2->getValue() == 'No') {
                                     $this->listarPlatosAEliminar($this->idpedido);
                                 }
