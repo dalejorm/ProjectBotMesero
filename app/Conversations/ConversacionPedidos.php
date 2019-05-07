@@ -80,18 +80,22 @@ class ConversacionPedidos extends Conversation
     }
 
     public function listarPedidosDetallado($ans) {
-        $platospedidos = \App\plato::select('platos.id as idplato','nombre', 'descripcion')
-                -> leftJoin ('platospedidos','platospedidos.plato_id','=','platos.id')
-                -> where('pedido_id', $ans)
-                -> orderby('platos.nombre', 'asc')->get();  
         $orden = "";
         $valor = 0;
+        $platospedidos = $this->cargarPlatospedidos($ans);
         $this->say("Información del pedido:");
         foreach ($platospedidos as $plato) {
             $valor ++;
-            $orden = $orden.$valor."- ".$plato->nombre."\n";
-                    
+            $orden = $orden.$valor."- ".$plato->nombre."\n";                    
         }
         $this->say($orden);   
+    }
+
+    public function cargarPlatospedidos($ans){
+        $platospedidos = \App\plato::select('platos.id as idplato','nombre', 'descripcion')
+                -> leftJoin ('platospedidos','platospedidos.plato_id','=','platos.id')
+                -> where('pedido_id', $ans)
+                -> orderby('platos.nombre', 'asc')->get(); 
+        return $platospedidos;
     }
 }

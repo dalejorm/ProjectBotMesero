@@ -4,7 +4,7 @@ namespace Tests\BotMan;
 
 use Tests\TestCase;
 
-class ConversacionAdministradorTest /**extends TestCase */
+class ConversacionAdministradorTest extends TestCase
 {
     /**
      * A basic test example.
