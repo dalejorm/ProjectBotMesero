@@ -84,7 +84,7 @@ class ConversacionAdministrador extends Conversation
     public function queHacer(){
         $question = Question::create('¿Que deseas hacer?')->addButtons([
                 Button::create('Agregar Categorías')->value(1),
-                Button::create('Agregar Platos')->value(2),
+                Button::create('Administrar Platos')->value(2),
                 Button::create('Consultar pedidos')->value(3)
         ]);
         $this->ask($question, function (Answer $answer) {

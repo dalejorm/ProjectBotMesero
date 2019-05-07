@@ -14,6 +14,7 @@ class ConversacionPlato extends Conversation
    protected $descripcion;
    protected $precio=0;
    protected $categoria_id=0;
+   protected $idplato;
   
     /**
      * Start the conversation.
@@ -21,12 +22,32 @@ class ConversacionPlato extends Conversation
      * @return mixed
      */
     public function run(){
-        $this->crearPlato();
+        $this->administrarPlatos();
     }
 
-    public function crearPlato(){ 
-       $this->agregarPlato();  
-    }    
+    public function administrarPlatos(){
+        $question = Question::create('¿Qué acción deseas realizar?')->addButtons([
+                Button::create('Agregar Plato')->value('Agregar'),
+                Button::create('Editar Plato')->value('Editar'),
+                Button::create('Eliminar Plato')->value('Eliminar')
+        ]);
+        $this->ask($question, function (Answer $answer) {
+            if ($answer->isInteractiveMessageReply()) {
+                if($answer->getValue()== 'Agregar'){
+                    $this->agregarPlato();
+                }elseif($answer->getValue()== 'Editar'){
+                    //Editar valores de platos DANI ALVAREZ
+                }elseif($answer->getValue()== 'Eliminar'){
+                    $this->listarCategoriasEliminarPlatos();
+                }
+            }
+            else
+            {
+                $this->say("Selecciona una respuesta");
+                $this->mostrarmenu();
+            }
+        });
+    }
 
     public function agregarPlato(){
         $question = Question::create('¿Quieres agregar un nuevo Plato?')->addButtons([
@@ -49,6 +70,7 @@ class ConversacionPlato extends Conversation
             }
         });
     }
+
     public function seleccionarCategoria(){       
         $categorias = \App\categoria::orderby('nombre', 'asc')->get();
         $buttonArray = [];
@@ -128,6 +150,77 @@ class ConversacionPlato extends Conversation
             'categoria_id' => $this->categoria_id
         ]);
         $this->say("Se ha registrado el plato: ".$this->nombre);
-    }  
+    }
+    
+    public function listarCategoriasEliminarPlatos(){
+        $categorias = \App\categoria::orderby('nombre', 'asc')->get();
+        $buttonArray = [];
+        foreach ($categorias as $categoria) {
+            $button = Button::create($categoria->nombre)->value($categoria->id);
+            $buttonArray[] = $button;
+        }
+        $buttonArray[] = Button::create('Volver')->value('Volver');
+
+        $question = Question::create('Seleccione la categoría de la cual desea eliminar platos')->addButtons($buttonArray);
+        $this->ask($question, function (Answer $answer) {
+            if ($answer->isInteractiveMessageReply()) {
+                if($answer->getValue()!= 'Volver'){
+                    $this->categoria_id = $answer-> getValue();
+                    $this->listarPlatosEliminar($this->categoria_id);
+                }else{
+                    $this->administrarPlatos();
+                }
+            }
+            else
+            {
+                $this->listarCategoriasEliminarPlatos();
+            }
+        });
+    }
+
+    public function listarPlatosEliminar($ans){
+        $platos = \App\plato::select('id', 'nombre')
+                            -> where('categoria_id', $ans)
+                            -> orderby('nombre', 'asc')->get();
+
+        $buttonArray = [];
+        foreach ($platos as $plato) {
+            $button = Button::create($plato->nombre)->value($plato->id);
+            $buttonArray[] = $button;
+        }
+        $buttonArray[] = Button::create('Volver')->value('Volver');
+
+        $question = Question::create('Selecciona el plato que deseas eliminar del pedido')->addButtons($buttonArray);
+        $this->ask($question, function (Answer $answer) {
+            if ($answer->isInteractiveMessageReply()) {
+                if ($answer->getValue() != 'Volver') {
+                    $question2 = Question::create('¿Está seguro de que desea eliminar el plato seleccionado?')->addButtons([
+                        Button::create('Sí')->value('Sí'),
+                        Button::create('No')->value('No')
+                    ]);
+                    $this->idplato = $answer->getValue();
+                    $this->ask($question2, function (Answer $answer2) {
+                        if ($answer2->isInteractiveMessageReply()) {
+                            if ($answer2->getValue() == 'Sí') {
+                                $eliminarplato = \App\plato::find($this->idplato)->delete();
+                                $this->say("Se ha eliminado el plato de la categoría");
+                                $this->listarPlatosEliminar($this->categoria_id);
+                            } elseif ($answer2->getValue() == 'No') {
+                                $this->listarPlatosEliminar($this->categoria_id);
+                            }
+                        } else {
+                            $this->say("Selecciona una respuesta");
+                            $this->listarPlatosEliminar($this->categoria_id);
+                        }
+                    });
+                }else{
+                    $this->listarCategoriasEliminarPlatos();
+                }
+            } else {
+                $this->say("Selecciona una respuesta");
+                $this->listarPlatosEliminar($this->categoria_id);
+            }
+        });
+    }
     
 }
