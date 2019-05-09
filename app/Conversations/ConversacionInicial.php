@@ -28,10 +28,13 @@ class ConversacionInicial extends Conversation
     }
 
     public function mostrarayuda(){
-        $ayuda = ['/carta' => 'Revisa categoría de productos',
-        '/historial' => 'Ver historial de pedidos',
-        '/pedido' => 'Revisa tu pedido',
-        '/orden' => 'Sigue tu solicutud'];
+        $ayuda = ['/carta' => 'Comando para visualizar las categorías del restaurante',
+        '/consultar' => 'Comando para que el usuario consulte el estado de sus pedidos',
+        '/cancelar' => 'Comando para que el usuario cancele los pedidos en estado Pendiente',
+        '/administrar' => 'Comando para que el usuario administrador gestione el menú del restaurante y consulte pedidos realizados por los usuarios',
+        '/testpedidos' => 'Comando para consultar los pedidos registrados por estados',
+        'hola' => 'Comando de ayuda para visualizar los comandos de la conversación',
+        'ayuda' => 'Comando de ayuda para visualizar los comandos de la conversación'];
         $this->say("Los comandos disponibles son:");
         foreach($ayuda as $key=>$value){
             $this->say($key . ": " . $value);
