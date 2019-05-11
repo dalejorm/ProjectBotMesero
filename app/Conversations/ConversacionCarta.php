@@ -38,6 +38,8 @@ class ConversacionCarta extends Conversation {
             $this->atender();
         } elseif ($this->mensaje == '/consultar') {
             $this->consultarPedido();
+        } elseif ($this->mensaje == '/referencias') {
+            $this->consultarReferencias();
         }
     }
 
@@ -348,7 +350,7 @@ class ConversacionCarta extends Conversation {
                             $this->ask($question, function (Answer $answer) {
                                 if ($answer->isInteractiveMessageReply()) {
                                     if ($answer->getValue() != 'Volver') {
-                                        $this->listarPlatosPedido($answer->getValue());
+                                        $this->listarPlatosPedido($answer->getValue(),'C');
                                     } else {
                                         $this->say('¿Necesitas ayuda?, prueba diciendo Hola o Ayuda');
                                     }
@@ -366,7 +368,34 @@ class ConversacionCarta extends Conversation {
         });
     }
 
-    public function listarPlatosPedido($ans){
+
+    public function consultarReferencias() {
+        $pedidos = \App\pedido::select('id as idpedido', 'fecha')->orderby('id', 'fecha', 'asc')->get();
+        $buttonArray = [];
+        foreach ($pedidos as $pedido) {
+            $button = Button::create('Nro.: ' . $pedido->idpedido . ' Fecha: ' . $pedido->fecha)->value($pedido->idpedido);
+            $buttonArray[] = $button;
+        }
+        $buttonArray[] = Button::create('Volver')->value('Volver');
+        if (count($pedidos) == 0) {
+            $this->say("No existen pedidos de referencia");
+        } else {
+            $question = Question::create('Seleccione el pedido a consultar')->addButtons($buttonArray);
+            $this->ask($question, function (Answer $answer) {
+                if ($answer->isInteractiveMessageReply()) {
+                    if ($answer->getValue() != 'Volver') {
+                        $this->listarPlatosPedido($answer->getValue(),'R');
+                    } else {
+                        $this->say('¿Necesitas ayuda?, prueba diciendo Hola o Ayuda');
+                    }
+                } else {
+                    $this->consultarPedido();
+                }
+            });
+        }
+    }
+
+    public function listarPlatosPedido($ans,$tipo){
         $platospedidos = \App\plato::select('platos.id as idplato','nombre', 'descripcion')
                 -> leftJoin ('platospedidos','platospedidos.plato_id','=','platos.id')
                 -> where('pedido_id', $ans)
@@ -379,6 +408,25 @@ class ConversacionCarta extends Conversation {
             $orden = $orden.$valor."- ".$plato->nombre."\n";            
         }
         $this->say($orden);
+
+        if($tipo == 'R'){//Si es referenciae
+            $question = Question::create('¿Quieres regresar a la opción anterior?')->addButtons([
+                Button::create('Sí')->value('Sí'),
+                Button::create('No')->value('No')
+            ]);
+
+            $this->ask($question, function (Answer $answer) {
+                if ($answer->isInteractiveMessageReply()) {
+                    if ($answer->getValue() == 'Sí') {
+                        $this->consultarReferencias();
+                    }else{
+                        $this->say('¿Necesitas ayuda?, prueba diciendo Hola o Ayuda');
+                    }
+                } else {
+                    $this->say("Selecciona una respuesta");                
+                }
+            });
+        }
     }
 
 }

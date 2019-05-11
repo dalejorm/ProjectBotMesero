@@ -35,3 +35,7 @@ $botman->hears('/consultar', function($bot){
     $bot->startConversation(new ConversacionCarta('/consultar'));
 })->stopsConversation();
 
+$botman->hears('/referencias', function($bot){
+    $bot->startConversation(new ConversacionCarta('/referencias'));
+})->stopsConversation();
+

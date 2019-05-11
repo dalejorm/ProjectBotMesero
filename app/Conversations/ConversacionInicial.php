@@ -31,6 +31,7 @@ class ConversacionInicial extends Conversation
         $ayuda = ['/carta' => 'Comando para visualizar las categorías del restaurante',
         '/consultar' => 'Comando para que el usuario consulte el estado de sus pedidos',
         '/cancelar' => 'Comando para que el usuario cancele los pedidos en estado Pendiente',
+        '/referencias' => 'Comando para consultar pedidos de referencia',
         '/administrar' => 'Comando para que el usuario administrador gestione el menú del restaurante y consulte pedidos realizados por los usuarios',
         '/testpedidos' => 'Comando para consultar los pedidos registrados por estados',
         'hola' => 'Comando de ayuda para visualizar los comandos de la conversación',
