@@ -49,10 +49,10 @@ class ConversacionPedidos extends Conversation
     }
 
 
-    public function listarPedidosPorEstado($ans) {
+    public function listarPedidosPorEstado($idPedido) {
         $pedidos = \App\pedido::select('pedidos.id as idpedido', 'fecha', 'name')
                 -> join ('users','users.id','=','pedidos.usuario_id')
-                -> where('estado', $ans)
+                -> where('estado', $idPedido)
                 -> orderby('fecha', 'asc')->get();
         $buttonArray = [];
         foreach ($pedidos as $pedido) {
@@ -61,7 +61,7 @@ class ConversacionPedidos extends Conversation
         }
         $buttonArray[] = Button::create('Volver')->value('Volver');
         if (count($pedidos) == 0) {
-            $this->say("No tenemos pedidos en estado ".$ans);
+            $this->say("No tenemos pedidos en estado ".$idPedido);
             $this->ConsultarPedidos();
         } else {
             $question = Question::create('Selecciona un pedido')->addButtons($buttonArray);
@@ -80,17 +80,17 @@ class ConversacionPedidos extends Conversation
         }
     }
 
-    public function listarPedidosDetallado($ans) {
+    public function listarPedidosDetallado($idPedido) {
         $orden = "";
         $valor = 0;
-        $platospedidos = $this->cargarPlatospedidos($ans);
+        $platospedidos = $this->cargarPlatospedidos($idPedido);
         $this->say("Información del pedido:");
         foreach ($platospedidos as $plato) {
             $valor ++;
             $orden = $orden.$valor."- ".$plato->nombre."\n";                    
         }
         $this->say($orden);              
-        $estado = $this->cargarestado($ans);
+        $estado = $this->cargarestado($idPedido);
         $question = Question::create('Cambia el estado:')->addButtons([
             Button::create($estado)->value($estado),
             Button::create('Volver')->value('volver'),          
@@ -101,7 +101,7 @@ class ConversacionPedidos extends Conversation
                     $this->say("Este pedido culmino su ciclo de vida");
                     $this->ConsultarPedidos();                    
                 }else if($answer->getValue()!= 'Volver'){                    
-                   $this->cambiarEstado($answer->getValue(), $this->id);
+                   $this->cambiarEstado($answer->getValue(), $this->id);                   
                 }else if($answer->getValue()== 'Volver'){
                     $this->ConsultarPedidos();
                 }
@@ -114,17 +114,17 @@ class ConversacionPedidos extends Conversation
         });
     }
 
-    public function cargarPlatospedidos($ans){
+    public function cargarPlatospedidos($idPedido){
         $platospedidos = \App\plato::select('platos.id as idplato','nombre', 'descripcion')
                 -> leftJoin ('platospedidos','platospedidos.plato_id','=','platos.id')
-                -> where('pedido_id', $ans)
+                -> where('pedido_id', $idPedido)
                 -> orderby('platos.nombre', 'asc')->get(); 
         return $platospedidos;
     }
     
-    public function cargarestado($ans){
-        $pedidocargados = \App\pedido::select('estado')->where('id',$ans)->get();
-        $this->id = $ans;
+    public function cargarestado($idPedido){
+        $pedidocargados = \App\pedido::select('estado')->where('id',$idPedido)->get();
+        $this->id = $idPedido;
         foreach ($pedidocargados  as $pedido) {
             if($pedido->estado == 'Pendiente'){
                 return 'Preparar';
@@ -138,22 +138,31 @@ class ConversacionPedidos extends Conversation
         }
         
     }
-    public function cambiarEstado($estado,$ans){
+    public function cambiarEstado($estado,$idPedido){
         if($estado == 'Preparar'){
-            $this->updateDB('En preparación',$ans);
+            $this->updateDB('En preparación',$idPedido);
         }else if ($estado == 'Enviar'){
-            $this->updateDB('Enviado',$ans);
+            $this->updateDB('Enviado',$idPedido);
         }else if ($estado == 'Entregar'){
-            $this->updateDB('Finalizado',$ans);
+            $this->updateDB('Finalizado',$idPedido);
         }
     }
 
-    public function updateDB($estado,$ans){
-        $actualizacion = \App\pedido::where('id', $ans)->update(['estado'=>$estado]);
+    public function updateDB($estado,$idPedido){
+        $actualizacion = \App\pedido::where('id', $idPedido)->update(['estado'=>$estado]);
         if($actualizacion > 0){
             $this->say("Estado actualizado correctamente");
+            $this->informarCLiente($idPedido);
         }else{
             $this->say("Ups, no se pudo actualizar el estado"); 
         }
+    }
+
+    public function informarCLiente($idPedido){
+        $pedidocargado = \App\pedido::select('*')->where('id',$idPedido)->get();
+        foreach ($pedidocargado  as $pedido) {
+            $this->say('Tu pedido '. $pedido->id.' ha cambiado de estado, ahora se encuentra: '.$pedido->estado);
+        } 
+        
     }
 }
