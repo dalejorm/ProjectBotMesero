@@ -158,9 +158,7 @@ class ConversacionCancelar extends Conversation
         $pedido = \App\pedido::find($this->idpedido);
 
         $pedido->estado = 'Cancelado';
-        $pedido->save();
-        
-        
+        $pedido->save(); 
         
 
        

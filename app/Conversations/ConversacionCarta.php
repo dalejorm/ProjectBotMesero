@@ -22,13 +22,25 @@ class ConversacionCarta extends Conversation {
     protected $pedido;
     protected $direccion;
     protected $idplato;
+    protected $mensaje;
+
     /**
      * Start the conversation.
      *
      * @return mixed
      */
+    public function __construct($mensaje) {
+        $this->mensaje = $mensaje;
+    }
+
     public function run() {
-        $this->atender();
+        if ($this->mensaje == '/carta') {
+            $this->atender();
+        } elseif ($this->mensaje == '/consultar') {
+            $this->consultarPedido();
+        } elseif ($this->mensaje == '/referencias') {
+            $this->consultarReferencias();
+        }
     }
 
     public function atender() {
@@ -42,7 +54,7 @@ class ConversacionCarta extends Conversation {
             Button::create('No')->value('No'),
             Button::create('Volver')->value('Volver')
         ]);
-       $this->ask($question, function (Answer $answer) {
+        $this->ask($question, function (Answer $answer) {
             if ($answer->isInteractiveMessageReply()) {
                 if ($answer->getValue() == 'Sí') {
                     $this->mostrarCategorias();
@@ -56,7 +68,7 @@ class ConversacionCarta extends Conversation {
         });
     }
 
-    public function mostrarCategorias() {        
+    public function mostrarCategorias() {
         $categorias = \App\categoria::orderby('nombre', 'asc')->get();
         $buttonArray = [];
         foreach ($categorias as $categoria) {
@@ -90,23 +102,23 @@ class ConversacionCarta extends Conversation {
             $button = Button::create($plato->nombre)->value($plato->id);
             $buttonArray[] = $button;
         }
-        
+
         $buttonArray[] = Button::create('Eliminar Platos del Pedido')->value('Eliminar');
         $buttonArray[] = Button::create('Finalizar Pedido')->value('Finalizar');
         $buttonArray[] = Button::create('Volver')->value('Volver');
-        
+
         if (count($platos) == 0) {
             $this->say("No tenemos platos registrados en esta categoría, intenta con otra");
             $this->mostrarCategorias();
         } else {
             $question = Question::create('Selecciona un plato')->addButtons($buttonArray);
             $this->ask($question, function (Answer $answer) {
-                if ($answer->isInteractiveMessageReply()) {                       
-                    if($answer->getValue() == 'Eliminar'){
+                if ($answer->isInteractiveMessageReply()) {
+                    if ($answer->getValue() == 'Eliminar') {
                         $this->listarPlatosAEliminar($this->idpedido);
-                    }elseif($answer->getValue() == 'Volver'){
+                    } elseif ($answer->getValue() == 'Volver') {
                         $this->mostrarCategorias();
-                    }else{
+                    } else {
                         $this->seleccionarPlato($answer->getValue());
                     }
                 } else {
@@ -117,28 +129,28 @@ class ConversacionCarta extends Conversation {
         }
     }
 
-    public function seleccionarPlato($ans) {        
+    public function seleccionarPlato($ans) {
         $this->plato = \App\plato::find($ans);
 
-        $this->say("Plato : ".$this->plato->nombre." Descripción: ".$this->plato->descripcion." Precio: $ ".$this->plato->precio);
+        $this->say("Plato : " . $this->plato->nombre . " Descripción: " . $this->plato->descripcion . " Precio: $ " . $this->plato->precio);
 
         $question = Question::create('Selecciona una opción')->addButtons([
             Button::create('Agregar al Pedido')->value('Agregar'),
             Button::create('Finalizar Pedido')->value('Finalizar'),
-            Button::create('Eliminar Platos del Pedido')->value('Eliminar'),            
+            Button::create('Eliminar Platos del Pedido')->value('Eliminar'),
             Button::create('Volver')->value('Volver')
         ]);
-            
+
         $this->ask($question, function (Answer $answer) {
             if ($answer->isInteractiveMessageReply()) {
                 if ($answer->getValue() == 'Agregar') {
-                    $this->agregarPlatoPedido($this->plato->id,$this->plato->nombre,$this->plato->categoria_id);
-                }elseif($answer->getValue() == 'Finalizar'){
-                    $this->finalizarPedido($this->idpedido);                    
-                }elseif($answer->getValue() == 'Eliminar'){
+                    $this->agregarPlatoPedido($this->plato->id, $this->plato->nombre, $this->plato->categoria_id);
+                } elseif ($answer->getValue() == 'Finalizar') {
+                    $this->finalizarPedido($this->idpedido);
+                } elseif ($answer->getValue() == 'Eliminar') {
                     $this->listarPlatosAEliminar($this->idpedido);
-                }else{
-                    $this->say("Plato : ".$this->plato->categoria_id);
+                } else {
+                    $this->say("Plato : " . $this->plato->categoria_id);
                     $this->mostrarPlatos($this->plato->categoria_id);
                 }
             } else {
@@ -146,26 +158,25 @@ class ConversacionCarta extends Conversation {
                 $this->seleccionarPlato($ans);
             }
         });
-        
     }
 
-    public function agregarPlatoPedido($idplato,$nombrePlato,$idcategoria){
+    public function agregarPlatoPedido($idplato, $nombrePlato, $idcategoria) {
         $this->contador = $this->contador + 1;
         $buttonArray = [];
-        if($this->contador == 1){
-            \App\pedido::create ([
+        if ($this->contador == 1) {
+            \App\pedido::create([
                 'estado' => 'Pendiente',
                 'fecha' => new \DateTime(),
                 'usuario_id' => 1
-            ]);            
-            $this->idpedido = \App\pedido::max('id');                                    
+            ]);
+            $this->idpedido = \App\pedido::max('id');
         }
 
-        \App\platopedido::create ([
+        \App\platopedido::create([
             'pedido_id' => $this->idpedido,
             'plato_id' => $idplato
         ]);
-        $this->say("Se ha agregado el plato: ".$nombrePlato.", su pedido es el Nro. ".$this->idpedido);
+        $this->say("Se ha agregado el plato: " . $nombrePlato . ", su pedido es el Nro. " . $this->idpedido);
         $buttonArray[] = Button::create('Finalizar Pedido')->value('Finalizar');
         $buttonArray[] = Button::create('Agregar más Platos')->value('Volver');
         $buttonArray[] = Button::create('Eliminar Platos del Pedido')->value('Eliminar');
@@ -175,9 +186,9 @@ class ConversacionCarta extends Conversation {
             if ($answer->isInteractiveMessageReply()) {
                 if ($answer->getValue() == 'Finalizar') {
                     $this->finalizarPedido($this->idpedido);
-                }elseif($answer->getValue() == 'Eliminar'){
+                } elseif ($answer->getValue() == 'Eliminar') {
                     $this->listarPlatosAEliminar($this->idpedido);
-                }elseif($answer->getValue() == 'Volver'){
+                } elseif ($answer->getValue() == 'Volver') {
                     $this->mostrarPlatos($this->plato->categoria_id);
                 }
             } else {
@@ -187,92 +198,88 @@ class ConversacionCarta extends Conversation {
         });
     }
 
-    public function finalizarPedido($id){
-        if($this->contador > 0){
-            $this->ask("Ingrese su usuario",function(Answer $response){
-                $this->usuario = $response->getText();                
-                if($this->verificarUsuario() == true){
-                    $this->ask("Ingrese su contraseña",function(Answer $response){
-                        $this->contrasena = $response->getText();           
-                        if($this->verificarContrasena() > 0){
+    public function finalizarPedido($id) {
+        if ($this->contador > 0) {
+            $this->ask("Ingrese su usuario", function(Answer $response) {
+                $this->usuario = $response->getText();
+                if ($this->verificarUsuario() == true) {
+                    $this->ask("Ingrese su contraseña", function(Answer $response) {
+                        $this->contrasena = $response->getText();
+                        if ($this->verificarContrasena() > 0) {
                             $this->say("Usuario correcto");
-                            $this->bandera = 1;                            
-                            $this->ask("Ingrese la dirección para el pedido",function(Answer $response){
-                                if($response->getText() != ''){
+                            $this->bandera = 1;
+                            $this->ask("Ingrese la dirección para el pedido", function(Answer $response) {
+                                if ($response->getText() != '') {
                                     $this->direccion = $response->getText();
                                     $this->pedido = \App\pedido::findOrFail($this->idpedido);
                                     $this->pedido->estado = 'En Preparación';
                                     $this->pedido->usuario_id = $this->verificarContrasena();
                                     $this->pedido->direccion = $this->direccion;
                                     $this->pedido->save();
-                                    $this->say("Señor(a) ".$this->usuario." su pedido nro. ".$this->idpedido." se ha finalizado, ya se ha enviado la información de su pedido al restaurante y se encuentra en preparación, no puede realizar más modificaciones.");
+                                    $this->say("Señor(a) " . $this->usuario . " su pedido nro. " . $this->idpedido . " se ha finalizado, ya se ha enviado la información de su pedido al restaurante y se encuentra en preparación, no puede realizar más modificaciones.");
                                     $this->say("Los platos agregados a su pedido son: ");
-                                    $platospedidos = \App\plato::select ('nombre','precio') 
-                                            -> join ('platospedidos','platospedidos.plato_id','=','platos.id')
-                                            -> where ('platospedidos.pedido_id', "=", $this->idpedido)
+                                    $platospedidos = \App\plato::select('nombre', 'precio')
+                                            ->join('platospedidos', 'platospedidos.plato_id', '=', 'platos.id')
+                                            ->where('platospedidos.pedido_id', "=", $this->idpedido)
                                             ->get();
 
                                     foreach ($platospedidos as $platopedido) {
-                                        $this->say("".$platopedido->nombre." Precio: ".$platopedido->precio);
+                                        $this->say("" . $platopedido->nombre . " Precio: " . $platopedido->precio);
                                     }
                                     $this->mostrarmenu();
-                                }else{
+                                } else {
                                     $this->say("Debe ingresar una dirección");
-                                }                          
-                            });                            
-                        }else{
-                            $this->finalizarPedido($this->idpedido);        
+                                }
+                            });
+                        } else {
+                            $this->finalizarPedido($this->idpedido);
                         }
                     });
-                }else{
+                } else {
                     $this->finalizarPedido($this->idpedido);
                 }
             });
-        }else{
+        } else {
             $this->say("No ha agregado platos al pedido");
             $this->mostrarPlatos($this->plato->categoria_id);
         }
-         
     }
 
-    public function verificarUsuario(){
-        $this->validarusuario = \App\User::select ('name') -> where ('name', "=", $this->usuario)->get();
-        if(count($this->validarusuario)== 0){
+    public function verificarUsuario() {
+        $this->validarusuario = \App\User::select('name')->where('name', "=", $this->usuario)->get();
+        if (count($this->validarusuario) == 0) {
             $this->say("El usuario ingresado es incorrecto. Inténtelo nuevamente");
             return false;
-        }
-        else{
-           return true; 
+        } else {
+            return true;
         }
     }
 
-    public function verificarContrasena(){
+    public function verificarContrasena() {
 
-        $users = \App\User::select ('id') 
-            -> where ('name', "=", $this->usuario)
-            -> where ('password', "=", $this->contrasena)
-            ->get();
+        $users = \App\User::select('id')
+                ->where('name', "=", $this->usuario)
+                ->where('password', "=", $this->contrasena)
+                ->get();
 
         foreach ($users as $user) {
             $this->idusuario = $user->id;
-        }      
+        }
 
-        if(count($users)==0){
-            $this->say("La contraseña es incorrecta");            
+        if (count($users) == 0) {
+            $this->say("La contraseña es incorrecta");
             return 0;
+        } else {
+            return $this->idusuario;
         }
-        else{            
-           return $this->idusuario; 
-        }
-
     }
 
-    public function listarPlatosAEliminar($idpedido){
+    public function listarPlatosAEliminar($idpedido) {
         $platospedidos = \App\pedido::select('platos.nombre as nombre', 'platospedidos.id as idplatopedido')
-                -> join ('platospedidos','platospedidos.pedido_id','=','pedidos.id')
-                -> join ('platos','platos.id','=','platospedidos.plato_id')
-                -> where('pedidos.id', $idpedido)
-                -> orderby('nombre', 'asc')->get();
+                        ->join('platospedidos', 'platospedidos.pedido_id', '=', 'pedidos.id')
+                        ->join('platos', 'platos.id', '=', 'platospedidos.plato_id')
+                        ->where('pedidos.id', $idpedido)
+                        ->orderby('nombre', 'asc')->get();
 
         $buttonArray = [];
         foreach ($platospedidos as $platopedido) {
@@ -281,7 +288,7 @@ class ConversacionCarta extends Conversation {
         }
         $buttonArray[] = Button::create('Volver')->value('Volver');
         if (count($platospedidos) == 0) {
-            $this->say("El pedido aún no tiene platos agregados ".$ans);
+            $this->say("El pedido aún no tiene platos agregados " . $ans);
             $this->mostrarCategorias();
         } else {
             $question = Question::create('Selecciona el plato que deseas eliminar del pedido')->addButtons($buttonArray);
@@ -307,7 +314,7 @@ class ConversacionCarta extends Conversation {
                                 $this->listarPlatosAEliminar($this->idpedido);
                             }
                         });
-                    }else{
+                    } else {
                         $this->mostrarCategorias();
                     }
                 } else {
@@ -316,7 +323,110 @@ class ConversacionCarta extends Conversation {
                 }
             });
         }
-
     }
-    
+
+    public function consultarPedido() {
+        $this->ask("Ingrese su usuario", function(Answer $response) {
+            $this->usuario = $response->getText();
+            if ($this->verificarUsuario() == true) {
+                $this->ask("Ingrese su contraseña", function(Answer $response) {
+                    $this->contrasena = $response->getText();
+                    if ($this->verificarContrasena() > 0) {
+                        $this->say("Usuario correcto");
+                        $pedidos = \App\pedido::select('id as idpedido', 'fecha', 'estado')
+                                        ->where('usuario_id', $this->verificarContrasena())
+                                        ->orderby('id', 'fecha', 'asc')->get();
+                        $buttonArray = [];
+                        foreach ($pedidos as $pedido) {
+                            $button = Button::create('Nro.: ' . $pedido->idpedido . ' Fecha: ' . $pedido->fecha . ' Estado: ' . $pedido->estado)->value($pedido->idpedido);
+                            $buttonArray[] = $button;
+                        }
+                        $buttonArray[] = Button::create('Volver')->value('Volver');
+
+                        if (count($pedidos) == 0) {
+                            $this->say("No existen pedidos registrados para su usuario");
+                        } else {
+                            $question = Question::create('Seleccione el pedido a consultar')->addButtons($buttonArray);
+                            $this->ask($question, function (Answer $answer) {
+                                if ($answer->isInteractiveMessageReply()) {
+                                    if ($answer->getValue() != 'Volver') {
+                                        $this->listarPlatosPedido($answer->getValue(),'C');
+                                    } else {
+                                        $this->say('¿Necesitas ayuda?, prueba diciendo Hola o Ayuda');
+                                    }
+                                } else {
+                                    $this->consultarPedido();
+                                }
+                            });
+                        }
+                    } else {
+                        $this->say('Contraseña Incorrecta');
+                        $this->consultarPedido();
+                    }
+                });
+            }
+        });
+    }
+
+
+    public function consultarReferencias() {
+        $pedidos = \App\pedido::select('id as idpedido', 'fecha')->orderby('id', 'fecha', 'asc')->get();
+        $buttonArray = [];
+        foreach ($pedidos as $pedido) {
+            $button = Button::create('Nro.: ' . $pedido->idpedido . ' Fecha: ' . $pedido->fecha)->value($pedido->idpedido);
+            $buttonArray[] = $button;
+        }
+        $buttonArray[] = Button::create('Volver')->value('Volver');
+        if (count($pedidos) == 0) {
+            $this->say("No existen pedidos de referencia");
+        } else {
+            $question = Question::create('Seleccione el pedido a consultar')->addButtons($buttonArray);
+            $this->ask($question, function (Answer $answer) {
+                if ($answer->isInteractiveMessageReply()) {
+                    if ($answer->getValue() != 'Volver') {
+                        $this->listarPlatosPedido($answer->getValue(),'R');
+                    } else {
+                        $this->say('¿Necesitas ayuda?, prueba diciendo Hola o Ayuda');
+                    }
+                } else {
+                    $this->consultarPedido();
+                }
+            });
+        }
+    }
+
+    public function listarPlatosPedido($ans,$tipo){
+        $platospedidos = \App\plato::select('platos.id as idplato','nombre', 'descripcion')
+                -> leftJoin ('platospedidos','platospedidos.plato_id','=','platos.id')
+                -> where('pedido_id', $ans)
+                -> orderby('platos.nombre', 'asc')->get(); 
+        $valor = 0;
+        $orden = "";
+        $this->say("Información del pedido:");
+        foreach ($platospedidos as $plato) {
+            $valor ++;
+            $orden = $orden.$valor."- ".$plato->nombre."\n";            
+        }
+        $this->say($orden);
+
+        if($tipo == 'R'){//Si es referenciae
+            $question = Question::create('¿Quieres regresar a la opción anterior?')->addButtons([
+                Button::create('Sí')->value('Sí'),
+                Button::create('No')->value('No')
+            ]);
+
+            $this->ask($question, function (Answer $answer) {
+                if ($answer->isInteractiveMessageReply()) {
+                    if ($answer->getValue() == 'Sí') {
+                        $this->consultarReferencias();
+                    }else{
+                        $this->say('¿Necesitas ayuda?, prueba diciendo Hola o Ayuda');
+                    }
+                } else {
+                    $this->say("Selecciona una respuesta");                
+                }
+            });
+        }
+    }
+
 }

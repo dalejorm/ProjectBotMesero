@@ -9,6 +9,7 @@ use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 
 class ConversacionPedidos extends Conversation
 {
+    protected $id;
     /**
      * Start the conversation.
      *
@@ -88,7 +89,29 @@ class ConversacionPedidos extends Conversation
             $valor ++;
             $orden = $orden.$valor."- ".$plato->nombre."\n";                    
         }
-        $this->say($orden);   
+        $this->say($orden);              
+        $estado = $this->cargarestado($ans);
+        $question = Question::create('Cambia el estado:')->addButtons([
+            Button::create($estado)->value($estado),
+            Button::create('Volver')->value('volver'),          
+        ]);
+        $this->ask($question, function (Answer $answer) {
+            if ($answer->isInteractiveMessageReply()) {
+                if($answer->getValue() == 'Finalizado'){
+                    $this->say("Este pedido culmino su ciclo de vida");
+                    $this->ConsultarPedidos();                    
+                }else if($answer->getValue()!= 'Volver'){                    
+                   $this->cambiarEstado($answer->getValue(), $this->id);
+                }else if($answer->getValue()== 'Volver'){
+                    $this->ConsultarPedidos();
+                }
+            }
+            else
+            {
+                $this->say("Selecciona una respuesta");
+                $this->listarPedidosPorEstado($this->id);
+            }
+        });
     }
 
     public function cargarPlatospedidos($ans){
@@ -97,5 +120,40 @@ class ConversacionPedidos extends Conversation
                 -> where('pedido_id', $ans)
                 -> orderby('platos.nombre', 'asc')->get(); 
         return $platospedidos;
+    }
+    
+    public function cargarestado($ans){
+        $pedidocargados = \App\pedido::select('estado')->where('id',$ans)->get();
+        $this->id = $ans;
+        foreach ($pedidocargados  as $pedido) {
+            if($pedido->estado == 'Pendiente'){
+                return 'Preparar';
+            }else if ($pedido->estado == 'En preparación'){
+                return 'Enviar';
+            }else if ($pedido->estado == 'Enviado'){
+                return 'Entregar';
+            }else {
+                return 'finalizado';
+            }
+        }
+        
+    }
+    public function cambiarEstado($estado,$ans){
+        if($estado == 'Preparar'){
+            $this->updateDB('En preparación',$ans);
+        }else if ($estado == 'Enviar'){
+            $this->updateDB('Enviado',$ans);
+        }else if ($estado == 'Entregar'){
+            $this->updateDB('Finalizado',$ans);
+        }
+    }
+
+    public function updateDB($estado,$ans){
+        $actualizacion = \App\pedido::where('id', $ans)->update(['estado'=>$estado]);
+        if($actualizacion > 0){
+            $this->say("Estado actualizado correctamente");
+        }else{
+            $this->say("Ups, no se pudo actualizar el estado"); 
+        }
     }
 }
