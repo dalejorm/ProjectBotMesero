@@ -10,7 +10,7 @@ use App\Conversations\ConversacionConsultarPedidos;
 $botman = resolve('botman');
 
 /////Cliente - usuario
-$botman->hears('Hola|Ayuda', function($bot){
+$botman->hears('Hola|Ayuda|/start', function($bot){
     $bot->startConversation(new ConversacionInicial());
 })->stopsConversation();
 

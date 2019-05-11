@@ -15,6 +15,7 @@ class ConversacionPlato extends Conversation
    protected $precio=0;
    protected $categoria_id=0;
    protected $idplato;
+   protected $valor;
   
     /**
      * Start the conversation.
@@ -36,7 +37,7 @@ class ConversacionPlato extends Conversation
                 if($answer->getValue()== 'Agregar'){
                     $this->agregarPlato();
                 }elseif($answer->getValue()== 'Editar'){
-                    //Editar valores de platos DANI ALVAREZ
+                    $this->listarCategoriasEditarPlatos();
                 }elseif($answer->getValue()== 'Eliminar'){
                     $this->listarCategoriasEliminarPlatos();
                 }
@@ -222,5 +223,73 @@ class ConversacionPlato extends Conversation
             }
         });
     }
+
+
+    public function listarCategoriasEditarPlatos(){
+        $categorias = \App\categoria::orderby('nombre', 'asc')->get();
+        $buttonArray = [];
+        foreach ($categorias as $categoria) {
+            $button = Button::create($categoria->nombre)->value($categoria->id);
+            $buttonArray[] = $button;
+        }
+        $buttonArray[] = Button::create('Volver')->value('Volver');
+
+        $question = Question::create('Seleccione la categoría de la cual desea editar platos')->addButtons($buttonArray);
+        $this->ask($question, function (Answer $answer) {
+            if ($answer->isInteractiveMessageReply()) {
+                if($answer->getValue()!= 'Volver'){
+                    $this->categoria_id = $answer-> getValue();
+                    $this->listarPlatosEditar($this->categoria_id);
+                }else{
+                    $this->administrarPlatos();
+                }
+            }
+            else
+            {
+                $this->listarCategoriasEditarPlatos();
+            }
+        });
+    }    
+
+    public function listarPlatosEditar($ans){
+        $platos = \App\plato::select('id', 'nombre')
+                            -> where('categoria_id', $ans)
+                            -> orderby('nombre', 'asc')->get();
+
+        $buttonArray = [];
+        foreach ($platos as $plato) {
+            $button = Button::create($plato->nombre)->value($plato->id);
+            $buttonArray[] = $button;
+        }
+        $buttonArray[] = Button::create('Volver')->value('Volver');
+
+        $question = Question::create('Selecciona el plato que deseas editar')->addButtons($buttonArray);
+        $this->ask($question, function (Answer $answer) {
+            if ($answer->isInteractiveMessageReply()) {
+                if ($answer->getValue() != 'Volver') {
+                    $this->idplato = $answer->getValue();
+                    $this->ask("Ingrese el valor del plato",function(Answer $response){
+                        
+                        $this->valor = $response->getText();
+                        $this->editarValor($this->idplato,$this->valor);
+                    });   
+                
+                }else{
+                    $this->listarCategoriasEditarPlatos();
+                }
+            } else {
+                $this->say("Selecciona una respuesta");
+                $this->listarPlatosEditar($this->categoria_id);
+            }
+        });
+    }
+
+    public function editarValor($ans,$valor){       
+       $plato = \App\plato::find($ans);
+       $plato->precio = $valor;
+       $plato->save(); 
+        $this->say("El valor del plato ha cambiado");
+           
     
+    }
 }
