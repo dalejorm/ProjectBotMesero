@@ -4,6 +4,7 @@ use App\Conversations\ConversacionInicial;
 use App\Conversations\ConversacionCarta;
 use App\Conversations\ConversacionAdministrador;
 use App\Conversations\ConversacionPedidos;
+use App\Conversations\ConversacionCancelar;
 
 $botman = resolve('botman');
 
@@ -29,6 +30,11 @@ $botman->hears('/administrar', function($bot){
 $botman->hears('/testpedidos', function($bot){
     $bot->startConversation(new ConversacionPedidos());
 })->stopsConversation();
+
+$botman->hears('/cancelar', function($bot){
+    $bot->startConversation(new ConversacionCancelar());
+})->stopsConversation();
+
 
 
 
